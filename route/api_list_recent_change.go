@@ -48,7 +48,7 @@ func Api_list_recent_change(config tool.Config) string {
     if set_type == "no_tag" {
         rows = tool.Query_DB(
             db,
-            tool.DB_change("select id, title from rc where title not like 'tag:%' order by date desc limit ?, ?"),
+            tool.DB_change("select id, title from rc where type = 'normal' and title not like 'tag:%' order by date desc limit ?, ?"),
             page_int, limit_int,
         )
     } else {
