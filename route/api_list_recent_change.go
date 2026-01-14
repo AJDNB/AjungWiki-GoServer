@@ -1,10 +1,11 @@
 package route
 
 import (
-	"opennamu/route/tool"
-	"strconv"
+"database/sql"
+"opennamu/route/tool"
+"strconv"
 
-	jsoniter "github.com/json-iterator/go"
+jsoniter "github.com/json-iterator/go"
 )
 
 func Api_list_recent_change(config tool.Config) string {
@@ -41,11 +42,22 @@ func Api_list_recent_change(config tool.Config) string {
         page_int = 0
     }
 
-    rows := tool.Query_DB(
-        db,
-        tool.DB_change("select id, title from rc where type = ? order by date desc limit ?, ?"),
-        set_type, page_int, limit_int,
-    )
+    var rows *sql.Rows
+    
+    // no_tag: tag: 문서 제외
+    if set_type == "no_tag" {
+        rows = tool.Query_DB(
+            db,
+            tool.DB_change("select id, title from rc where title not like 'tag:%' order by date desc limit ?, ?"),
+            page_int, limit_int,
+        )
+    } else {
+        rows = tool.Query_DB(
+            db,
+            tool.DB_change("select id, title from rc where type = ? order by date desc limit ?, ?"),
+            set_type, page_int, limit_int,
+        )
+    }
     defer rows.Close()
 
     data_list := [][]string{}
@@ -134,6 +146,7 @@ func Api_list_recent_change(config tool.Config) string {
             "setting":        tool.Get_language(db, "setting", false),
             "remove_hidden":  tool.Get_language(db, "remove_hidden", false),
             "admin_tool":     tool.Get_language(db, "admin_tool", false),
+            "no_tag":         tool.Get_language(db, "no_tag", false),
         }
         return_data["auth"] = auth_info
         return_data["data"] = data_list
